@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>قائمة النواقص</title>
+<style>
+  :root {
+    --bg: #16241F;
+    --panel: #1E332B;
+    --panel-2: #233A31;
+    --text: #F1EDE2;
+    --muted: #9FB3A8;
+    --accent: #E8B923;
+    --danger: #C1453D;
+    --border: rgba(241, 237, 226, 0.14);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+  .top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .lang-switch {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .lang-btn {
+    background: var(--panel-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .lang-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 4px;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0 0 20px;
+  }
+  .progress {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+  }
+  .progress-count {
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .whatsapp-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 18px;
+  }
+  .whatsapp-btn:disabled {
+    background: var(--panel-2);
+    color: var(--muted);
+    cursor: default;
+  }
+  .category-header {
+    font-size: 15px;
+    font-weight: 800;
+    margin: 18px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px dashed var(--accent);
+  }
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel-2);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 6px;
+    transition: opacity 0.2s;
+    cursor: pointer;
+  }
+  .item-row.purchased {
+    opacity: 0.5;
+  }
+  .item-checkbox {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+    pointer-events: none;
+  }
+  .item-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    cursor: zoom-in;
+  }
+  .item-thumb-placeholder {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 24px;
+    cursor: zoom-out;
+  }
+  .lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 12px;
+  }
+  .item-name {
+    flex: 1;
+    font-size: 15px;
+  }
+  .item-row.purchased .item-name {
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+  .item-qty {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+    background: rgba(232, 185, 35, 0.12);
+    border-radius: 8px;
+    padding: 2px 8px;
+  }
+  .state-message {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+    font-size: 14px;
+  }
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-row">
+      <div>
+        <h1 id="title">قائمة النواقص</h1>
+        <p class="subtitle" id="subtitle">اضغط على أي منتج لتحديد أنه تم شراؤه</p>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-btn" data-lang="ar" onclick="setLanguage('ar')">AR</button>
+        <button class="lang-btn" data-lang="tr" onclick="setLanguage('tr')">TR</button>
+        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+      </div>
+    </div>
+    <div class="progress" id="progress" style="display:none">
+      <span id="progressLabel">تم شراؤه</span>
+      <span class="progress-count" id="progressCount">0 / 0</span>
+    </div>
+    <button class="whatsapp-btn" id="whatsappBtn" style="display:none" onclick="sendRemainingViaWhatsApp()">
+      <span id="whatsappBtnLabel">إرسال الناقص عبر واتساب</span>
+    </button>
+    <div id="content">
+      <div class="state-message">
+        <div class="spinner"></div>
+        <span id="loadingText">جارِ تحميل القائمة…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="" />
+  </div>
+
+<script>
+  // ---- CONFIG: paste your Firebase Realtime Database URL here ----
+  // Must match the "Firebase Database URL" set in the app's Settings.
+  // Example: "https://your-project-default-rtdb.firebaseio.com"
+  const DATABASE_URL = "https://restock-list-cb1c5-default-rtdb.firebaseio.com";
+
+  // ---- Translations (Arabic is the default, matching the app) ----
+  const TRANSLATIONS = {
+    ar: {
+      dir: "rtl",
+      defaultTitle: "قائمة النواقص",
+      subtitle: "اضغط على أي منتج لتحديد أنه تم شراؤه",
+      loading: "جارِ تحميل القائمة…",
+      purchasedLabel: "تم شراؤه",
+      uncategorized: "بدون قسم",
+      invalidLink: "الرابط غير صالح — لا يوجد رقم قائمة.",
+      needsConfig: "هذه الصفحة تحتاج إعداد: افتح list.html وضع رابط قاعدة بيانات Firebase.",
+      notFound: "لم يتم العثور على هذه القائمة. ربما انتهت صلاحيتها أو الرابط غير صحيح.",
+      networkError: "تعذر تحميل القائمة. تحقق من اتصال الإنترنت.",
+      emptyList: "القائمة فارغة.",
+      whatsappBtn: "إرسال الناقص عبر واتساب",
+      allPurchased: "تم شراء كل شيء ✓"
+    },
+    tr: {
+      dir: "ltr",
+      defaultTitle: "Eksik Listesi",
+      subtitle: "Satın aldığınızı işaretlemek için bir ürüne dokunun",
+      loading: "Liste yükleniyor…",
+      purchasedLabel: "Satın alındı",
+      uncategorized: "Bölümsüz",
+      invalidLink: "Geçersiz bağlantı — liste numarası yok.",
+      needsConfig: "Bu sayfa kurulum gerektiriyor: list.html dosyasını açıp Firebase veritabanı URL'sini girin.",
+      notFound: "Bu liste bulunamadı. Süresi dolmuş veya bağlantı hatalı olabilir.",
+      networkError: "Liste yüklenemedi. İnternet bağlantınızı kontrol edin.",
+      emptyList: "Liste boş.",
+      whatsappBtn: "Kalanları WhatsApp ile gönder",
+      allPurchased: "Her şey satın alındı ✓"
+    },
+    en: {
+      dir: "ltr",
+      defaultTitle: "Restock List",
+      subtitle: "Tap any item to mark it as purchased",
+      loading: "Loading list…",
+      purchasedLabel: "Purchased",
+      uncategorized: "Uncategorized",
+      invalidLink: "Invalid link — no list ID.",
+      needsConfig: "This page needs setup: open list.html and set the Firebase database URL.",
+      notFound: "This list wasn't found. It may have expired or the link is wrong.",
+      networkError: "Couldn't load the list. Check your internet connection.",
+      emptyList: "The list is empty.",
+      whatsappBtn: "Send remaining items via WhatsApp",
+      allPurchased: "Everything's been purchased ✓"
+    }
+  };
+
+  let currentLang = localStorage.getItem("restock_lang") || "ar";
+
+  const params = new URLSearchParams(window.location.search);
+  const listId = params.get("id");
+  const contentEl = document.getElementById("content");
+  const progressEl = document.getElementById("progress");
+  const progressCountEl = document.getElementById("progressCount");
+  const progressLabelEl = document.getElementById("progressLabel");
+  const subtitleEl = document.getElementById("subtitle");
+  const loadingTextEl = document.getElementById("loadingText");
+  const titleEl = document.getElementById("title");
+  const whatsappBtn = document.getElementById("whatsappBtn");
+  const whatsappBtnLabel = document.getElementById("whatsappBtnLabel");
+
+  let currentData = null;
+  let lastMessageKey = null; // remembers which static message is showing, so language switches re-render it
+
+  function t(key) {
+    return TRANSLATIONS[currentLang][key];
+  }
+
+  function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem("restock_lang", lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = t("dir");
+    document.querySelectorAll(".lang-btn").forEach(function (btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-lang") === lang);
+    });
+    subtitleEl.textContent = t("subtitle");
+    loadingTextEl.textContent = t("loading");
+    progressLabelEl.textContent = t("purchasedLabel");
+    whatsappBtnLabel.textContent = t("whatsappBtn");
+
+    if (currentData) {
+      render(currentData);
+    } else if (lastMessageKey) {
+      showMessage(lastMessageKey);
+    }
+  }
+
+  function showMessage(key) {
+    lastMessageKey = key;
+    contentEl.innerHTML = '<div class="state-message">' + t(key) + "</div>";
+    progressEl.style.display = "none";
+    whatsappBtn.style.display = "none";
+  }
+
+  async function loadList() {
+    if (!listId) {
+      showMessage("invalidLink");
+      return;
+    }
+    if (DATABASE_URL.indexOf("REPLACE_WITH") === 0) {
+      showMessage("needsConfig");
+      return;
+    }
+    try {
+      const res = await fetch(DATABASE_URL.replace(/\/$/, "") + "/shared_lists/" + listId + ".json");
+      if (!res.ok) throw new Error("network");
+      const data = await res.json();
+      if (!data) {
+        showMessage("notFound");
+        return;
+      }
+      currentData = data;
+      lastMessageKey = null;
+      render(data);
+    } catch (e) {
+      showMessage("networkError");
+    }
+  }
+
+  async function togglePurchased(itemId, newValue) {
+    if (currentData && currentData.items && currentData.items[itemId]) {
+      currentData.items[itemId].purchased = newValue;
+      render(currentData);
+    }
+    try {
+      await fetch(
+        DATABASE_URL.replace(/\/$/, "") + "/shared_lists/" + listId + "/items/" + itemId + "/purchased.json",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newValue)
+        }
+      );
+    } catch (e) {
+      // best-effort; the next poll will resync if this failed
+    }
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /** Groups a list of {id, name, category, quantity, purchased} entries by
+   * category, preserving first-seen order, with uncategorized items last. */
+  function groupByCategory(entries) {
+    const groups = [];
+    const groupIndex = {};
+    entries.forEach(function (item) {
+      const key = item.category || "__none__";
+      if (!(key in groupIndex)) {
+        groupIndex[key] = groups.length;
+        groups.push({ name: item.category || null, items: [] });
+      }
+      groups[groupIndex[key]].items.push(item);
+    });
+    groups.sort(function (a, b) {
+      return (a.name === null ? 1 : 0) - (b.name === null ? 1 : 0);
+    });
+    return groups;
+  }
+
+  function render(data) {
+    titleEl.textContent = data.title || t("defaultTitle");
+
+    const items = data.items || {};
+    const entries = Object.keys(items).map(function (id) {
+      return Object.assign({ id: id }, items[id]);
+    });
+    if (entries.length === 0) {
+      showMessage("emptyList");
+      return;
+    }
+
+    const purchasedCount = entries.filter(function (it) { return it.purchased; }).length;
+    progressEl.style.display = "flex";
+    progressCountEl.textContent = purchasedCount + " / " + entries.length;
+
+    whatsappBtn.style.display = "flex";
+    if (purchasedCount === entries.length) {
+      whatsappBtn.disabled = true;
+      whatsappBtnLabel.textContent = t("allPurchased");
+    } else {
+      whatsappBtn.disabled = false;
+      whatsappBtnLabel.textContent = t("whatsappBtn");
+    }
+
+    const groups = groupByCategory(entries);
+
+    let html = "";
+    groups.forEach(function (group) {
+      html += '<div class="category-header">' + (group.name || t("uncategorized")) + "</div>";
+      group.items.forEach(function (item) {
+        const purchasedClass = item.purchased ? " purchased" : "";
+        const thumbHtml = item.image
+          ? '<img class="item-thumb" src="' + item.image + '" data-lightbox="1" alt="" />'
+          : '<div class="item-thumb-placeholder">🧺</div>';
+        html +=
+          '<div class="item-row' + purchasedClass + '" data-id="' + item.id + '">' +
+          '<input type="checkbox" class="item-checkbox" ' + (item.purchased ? "checked" : "") + " />" +
+          thumbHtml +
+          '<span class="item-name">' + escapeHtml(item.name) + "</span>" +
+          '<span class="item-qty">×' + item.quantity + "</span>" +
+          "</div>";
+      });
+    });
+    contentEl.innerHTML = html;
+
+    contentEl.querySelectorAll(".item-row").forEach(function (row) {
+      const id = row.getAttribute("data-id");
+      row.addEventListener("click", function () {
+        const newValue = !(items[id].purchased === true);
+        togglePurchased(id, newValue);
+      });
+    });
+
+    contentEl.querySelectorAll(".item-thumb[data-lightbox]").forEach(function (img) {
+      img.addEventListener("click", function (e) {
+        e.stopPropagation(); // don't also toggle purchased on the row underneath
+        openLightbox(img.src);
+      });
+    });
+  }
+
+  function openLightbox(src) {
+    document.getElementById("lightboxImg").src = src;
+    document.getElementById("lightbox").style.display = "flex";
+  }
+
+  function closeLightbox() {
+    document.getElementById("lightbox").style.display = "none";
+  }
+
+  function sendRemainingViaWhatsApp() {
+    if (!currentData || !currentData.items) return;
+    const items = currentData.items;
+    const entries = Object.keys(items)
+      .map(function (id) { return Object.assign({ id: id }, items[id]); })
+      .filter(function (item) { return !item.purchased; });
+    if (entries.length === 0) return;
+
+    const groups = groupByCategory(entries);
+    const title = currentData.title || t("defaultTitle");
+
+    let message = "📋 " + title + "\n\n";
+    groups.forEach(function (group) {
+      message += "*" + (group.name || t("uncategorized")) + "*\n";
+      group.items.forEach(function (item, index) {
+        message += (index + 1) + ". " + item.name + " × " + item.quantity + "\n";
+      });
+      message += "\n";
+    });
+
+    const url = "https://wa.me/?text=" + encodeURIComponent(message.trim());
+    window.open(url, "_blank");
+  }
+
+  setLanguage(currentLang);
+  loadList();
+  // Light polling so two people opening the same link stay roughly in sync
+  // (no Firebase JS SDK / WebSocket needed -- just a periodic re-fetch).
+  setInterval(loadList, 5000);
+</script>
+</body>
+</html>
